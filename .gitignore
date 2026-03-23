@@ -1,0 +1,20 @@
+# Composer
+/vendor/
+
+# Phalcon cache & logs
+/cache/
+/logs/
+
+# Environment
+.env
+
+# IDE
+.idea/
+.vscode/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# PHPUnit
+/phpunit.xml

@@ -1,0 +1,10 @@
+{
+    "require": {
+        "firebase/php-jwt": "^6.4",
+        "setasign/fpdf": "^1.8",
+        "setasign/fpdi": "^2.6"
+    },
+    "require-dev": {
+        "phalcon/devtools": "5.0.x-dev"
+    }
+}
