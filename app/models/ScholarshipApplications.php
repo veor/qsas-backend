@@ -29,6 +29,12 @@ class ScholarshipApplications extends \Phalcon\Mvc\Model
 
     /**
      *
+     * @var string
+     */
+    public $priority_course;
+
+    /**
+     *
      * @var double
      */
     public $assessment_weight;

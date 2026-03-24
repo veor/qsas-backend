@@ -206,5 +206,34 @@ $router->addGet('/admin/top-by-municipality', [
     'action'     => 'getTopByMunicipality'
 ]);
 
+// $router->addPost('/admin/rejectPriorityApplicants', [
+$router->addPost('/admin/reject-priority-applicants', [
+    'controller' => 'admin',
+    'action'     => 'rejectPriorityApplicants'
+]);
+
+// $router->addGet('/admin/getTopByOnePoorFam', [
+$router->addGet('/admin/top-by-one-poor-fam', [
+    'controller' => 'admin',
+    'action'     => 'getTopByOnePoorFam'
+]);
+
+// $router->addPost('/admin/rejectOnePoorFamApplicants', [
+$router->addPost('/admin/reject-one-poor-fam-applicants', [
+    'controller' => 'admin',
+    'action'     => 'rejectOnePoorFamApplicants'
+]);
+
+// $router->addGet('/admin/getTopByStanC', [
+$router->addGet('/admin/top-by-stan-c', [
+    'controller' => 'admin',
+    'action'     => 'getTopByStanC'
+]);
+
+// $router->addPost('/admin/rejectStanCApplicants', [
+$router->addPost('/admin/reject-stan-c-applicants', [
+    'controller' => 'admin',
+    'action'     => 'rejectStanCApplicants'
+]);
 
 $router->handle($_SERVER['REQUEST_URI']);

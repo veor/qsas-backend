@@ -508,9 +508,15 @@ class ApplicantController extends \Phalcon\Mvc\Controller
         $data = $request->getJsonRawBody(true);
         $applicationRefNo = $data['applicationRefNo'] ?? null;
         $scholarshipType = $data['scholarshipType'] ?? null;
+        $priorityCourse = $data['priorityCourse'] ?? null;
 
         if (!$applicationRefNo || !$scholarshipType) {
             return $this->response->setJsonContent(['error' => 'Missing data'])->setStatusCode(400);
+        }
+        if ($scholarshipType === 'Priority Courses Scholarship' && !$priorityCourse) {
+            return $this->response->setJsonContent([
+                'error' => 'Priority course selection is required'
+            ])->setStatusCode(400);
         }
 
         $applicant = Applicants::findFirstByApplicationRefNo($applicationRefNo);
@@ -608,7 +614,10 @@ class ApplicantController extends \Phalcon\Mvc\Controller
         $application->geo_loc_weight = $geoLocWeight;
         $application->grade_points_weight = $gradePointsWeight;
         $application->priority_weight = $priorityWeight;
-
+        // Save selected Priority Course if applicable
+        if ($scholarshipType === 'Priority Courses Scholarship') {
+            $application->priority_course = $priorityCourse;
+        }
         if (!$application->save()) {
             return $this->response->setJsonContent([
                 'error' => 'Failed to apply for scholarship',
@@ -627,6 +636,7 @@ class ApplicantController extends \Phalcon\Mvc\Controller
             'geo_loc_weight' => $geoLocWeight,
             'grade_points_weight' => $gradePointsWeight,
             'priority_weight' => $priorityWeight,
+            'priority_course' => $priorityCourse,
             'scholarship_type' => $scholarshipType
         ]);
     }
