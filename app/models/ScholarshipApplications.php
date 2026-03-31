@@ -73,6 +73,12 @@ class ScholarshipApplications extends \Phalcon\Mvc\Model
      *
      * @var string
      */
+    public $ranking_status;
+
+    /**
+     *
+     * @var string
+     */
     public $applied_at;
 
     /**

@@ -89,7 +89,8 @@ class AdminController extends \Phalcon\Mvc\Controller
             WHERE sa.scholarship_type = 'Priority Courses Scholarship'
             AND sa.status = 'pending'
             AND sa.priority_weight IS NOT NULL
-            ORDER BY sa.priority_course ASC, sa.priority_weight DESC
+            AND sa.priority_course IS NOT NULL
+            ORDER BY sa.priority_weight DESC
         ";
 
         $connection = $this->getDI()->get('db');
@@ -98,19 +99,27 @@ class AdminController extends \Phalcon\Mvc\Controller
         $rows = $result->fetchAll();
 
         $data = [];
+
         foreach ($rows as $row) {
-            $data[] = [
-                'application_ref_no'      => $row['application_ref_no'],
-                'current_course'          => !empty($row['priority_course']) ? $row['priority_course'] : 'N/A',
-                'priority_weight'         => $row['priority_weight'] !== null
-                    ? (float) number_format((float) $row['priority_weight'], 2, '.', '')
-                    : null,
-                'name'                    => preg_replace('/\s+/', ' ', $row['full_name']),
-                'civil_status'            => $row['civil_status'] ?? 'N/A',
-                'current_academic_status' => $row['current_academic_status'] ?? 'N/A',
-                'age'                     => $row['age'] !== null ? (int) $row['age'] : null,
-                'municipality'            => $row['municipality_name'] ?? 'N/A',
-            ];
+
+            // Split multiple courses stored in one column
+            $courses = explode(',', $row['priority_course']);
+
+            foreach ($courses as $course) {
+
+                $data[] = [
+                    'application_ref_no'      => $row['application_ref_no'],
+                    'current_course'          => trim($course),
+                    'priority_weight'         => $row['priority_weight'] !== null
+                        ? (float) number_format((float) $row['priority_weight'], 2, '.', '')
+                        : null,
+                    'name'                    => preg_replace('/\s+/', ' ', $row['full_name']),
+                    'civil_status'            => $row['civil_status'] ?? 'N/A',
+                    'current_academic_status' => $row['current_academic_status'] ?? 'N/A',
+                    'age'                     => $row['age'] !== null ? (int) $row['age'] : null,
+                    'municipality'            => $row['municipality_name'] ?? 'N/A',
+                ];
+            }
         }
 
         return $this->response->setJsonContent($data);
@@ -316,8 +325,8 @@ class AdminController extends \Phalcon\Mvc\Controller
 
         $data = [];
         foreach ($rows as $row) {
-            $answer1 = null;
-            $answer2 = null;
+            $siblingInCollege      = null;
+            $siblingGraduated      = null;
 
             if (!empty($row['applicant_answers'])) {
                 $answers = json_decode($row['applicant_answers'], true);
@@ -326,24 +335,24 @@ class AdminController extends \Phalcon\Mvc\Controller
                     foreach ($answers as $answer) {
                         if (!isset($answer['id'])) continue;
                         $id = trim((string) $answer['id']);
-                        if ($id === '3.1.1.1') $answer1 = $answer['answer'] ?? null;
-                        if ($id === '3.2.1.1') $answer2 = $answer['answer'] ?? null;
+                        if ($id === '2.3.6') $siblingInCollege = $answer['answer'] ?? null;
+                        if ($id === '2.3.7') $siblingGraduated = $answer['answer'] ?? null;
                     }
                 }
             }
 
             $data[] = [
-                'application_ref_no'      => $row['application_ref_no'],
-                'assessment_weight'       => $row['assessment_weight'] !== null
+                'application_ref_no'       => $row['application_ref_no'],
+                'assessment_weight'        => $row['assessment_weight'] !== null
                     ? (float) number_format((float) $row['assessment_weight'], 2, '.', '')
                     : null,
-                'name'                    => preg_replace('/\s+/', ' ', $row['full_name']),
-                'civil_status'            => $row['civil_status'] ?? 'N/A',
-                'current_academic_status' => $row['current_academic_status'] ?? 'N/A',
-                'age'                     => $row['age'] !== null ? (int) $row['age'] : null,
-                'municipality'            => $row['municipality_name'] ?? 'N/A',
-                'fathers_profession'      => $answer1 ?? 'N/A',
-                'mothers_profession'      => $answer2 ?? 'N/A',
+                'name'                     => preg_replace('/\s+/', ' ', $row['full_name']),
+                'civil_status'             => $row['civil_status'] ?? 'N/A',
+                'current_academic_status'  => $row['current_academic_status'] ?? 'N/A',
+                'age'                      => $row['age'] !== null ? (int) $row['age'] : null,
+                'municipality'             => $row['municipality_name'] ?? 'N/A',
+                'sibling_in_college'       => $siblingInCollege ?? 'N/A',
+                'sibling_graduated'        => $siblingGraduated ?? 'N/A',
             ];
         }
 
@@ -408,7 +417,7 @@ class AdminController extends \Phalcon\Mvc\Controller
     }
     public function getTopByStanCAction()
     {
-        $this->view->disable();
+       $this->view->disable();
 
         $sql = "
             SELECT
@@ -453,8 +462,8 @@ class AdminController extends \Phalcon\Mvc\Controller
 
         $data = [];
         foreach ($rows as $row) {
-            $answer1 = null;
-            $answer2 = null;
+            $siblingInCollege      = null;
+            $siblingGraduated      = null;
 
             if (!empty($row['applicant_answers'])) {
                 $answers = json_decode($row['applicant_answers'], true);
@@ -463,24 +472,24 @@ class AdminController extends \Phalcon\Mvc\Controller
                     foreach ($answers as $answer) {
                         if (!isset($answer['id'])) continue;
                         $id = trim((string) $answer['id']);
-                        if ($id === '3.1.1.1') $answer1 = $answer['answer'] ?? null;
-                        if ($id === '3.2.1.1') $answer2 = $answer['answer'] ?? null;
+                        if ($id === '2.3.6') $siblingInCollege = $answer['answer'] ?? null;
+                        if ($id === '2.3.7') $siblingGraduated = $answer['answer'] ?? null;
                     }
                 }
             }
 
             $data[] = [
-                'application_ref_no'      => $row['application_ref_no'],
-                'assessment_weight'       => $row['assessment_weight'] !== null
+                'application_ref_no'       => $row['application_ref_no'],
+                'assessment_weight'        => $row['assessment_weight'] !== null
                     ? (float) number_format((float) $row['assessment_weight'], 2, '.', '')
                     : null,
-                'name'                    => preg_replace('/\s+/', ' ', $row['full_name']),
-                'civil_status'            => $row['civil_status'] ?? 'N/A',
-                'current_academic_status' => $row['current_academic_status'] ?? 'N/A',
-                'age'                     => $row['age'] !== null ? (int) $row['age'] : null,
-                'municipality'            => $row['municipality_name'] ?? 'N/A',
-                'fathers_profession'      => $answer1 ?? 'N/A',
-                'mothers_profession'      => $answer2 ?? 'N/A',
+                'name'                     => preg_replace('/\s+/', ' ', $row['full_name']),
+                'civil_status'             => $row['civil_status'] ?? 'N/A',
+                'current_academic_status'  => $row['current_academic_status'] ?? 'N/A',
+                'age'                      => $row['age'] !== null ? (int) $row['age'] : null,
+                'municipality'             => $row['municipality_name'] ?? 'N/A',
+                'sibling_in_college'       => $siblingInCollege ?? 'N/A',
+                'sibling_graduated'        => $siblingGraduated ?? 'N/A',
             ];
         }
 
@@ -554,8 +563,11 @@ class AdminController extends \Phalcon\Mvc\Controller
         $applicants = Applicants::find();
 
         $scholarshipApps = ScholarshipApplications::find([
-            'conditions' => 'status = :status:',
-            'bind'       => ['status' => 'pending']
+            'conditions' => 'status = :status: AND (ranking_status IS NULL OR ranking_status != :excluded:)',
+            'bind'       => [
+                'status'   => 'pending',
+                'excluded' => 'excluded'
+            ]
         ]);
 
         // Map scholarship applications by application_ref_no
@@ -633,6 +645,7 @@ class AdminController extends \Phalcon\Mvc\Controller
                         'grades'                  => $applicant->grades ? json_decode($applicant->grades, true) : [],
                         'created_at'              => $sch->applied_at ?? $applicant->created_at,
                         'scholarship_type'        => $sch->scholarship_type,
+                        'ranking_status'          => $sch->ranking_status ?? null,
                         'father_name'             => $fatherName,
                         'mother_name'             => $motherName,
                         'birthdate'               => $applicant->birthdate,
@@ -665,6 +678,7 @@ class AdminController extends \Phalcon\Mvc\Controller
                     'grades'                  => $applicant->grades ? json_decode($applicant->grades, true) : [],
                     'created_at'              => $applicant->created_at,
                     'scholarship_type'        => $applicant->scholarship_type,
+                    'ranking_status'          => null,
                     'father_name'             => $fatherName,
                     'mother_name'             => $motherName,
                     'birthdate'               => $applicant->birthdate,
@@ -886,20 +900,91 @@ class AdminController extends \Phalcon\Mvc\Controller
     ///////////////////////////
     // --- User Settings --- //
     ///////////////////////////
+    // public function createUserAction()
+    // {
+    //     $this->view->disable(); 
+    //     $response = new Response();
+
+    //     try {
+    //         $idNo        = trim($this->request->getPost('idNo', 'string'));
+    //         $firstName   = trim($this->request->getPost('first_name', 'string'));
+    //         $middleName  = trim($this->request->getPost('middle_name', 'string'));
+    //         $lastName    = trim($this->request->getPost('last_name', 'string'));
+    //         $designation = trim($this->request->getPost('designation', 'string'));
+    //         $phone       = trim($this->request->getPost('phone', 'string'));
+    //         $password    = trim($this->request->getPost('password', 'string'));
+    //         $permissions = $this->request->getPost('permissions');
+
+    //         if (!$idNo || !$firstName || !$lastName || !$password) {
+    //             return $response->setJsonContent([
+    //                 'status'  => 'error',
+    //                 'message' => 'ID No, First name, Last name, and Password are required.'
+    //             ]);
+    //         }
+
+    //         $avatarPath = null;
+    //         if ($this->request->hasFiles(true)) {
+    //             foreach ($this->request->getUploadedFiles() as $file) {
+    //                 if ($file->getKey() === 'avatar' && $file->getSize() > 0) {
+    //                     $uploadDir = dirname(APP_PATH) . '/public/admin-avatar/'; 
+    //                     if (!is_dir($uploadDir)) {
+    //                         mkdir($uploadDir, 0755, true);
+    //                     }
+    //                     $filename = uniqid() . '_' . preg_replace('/\s+/', '_', $file->getName());
+    //                     $file->moveTo($uploadDir . $filename);
+    //                     $avatarPath = 'admin-avatar/' . $filename; 
+    //                 }
+    //             }
+    //         }
+    
+
+    //         $user = new Users();
+    //         $user->idNo         = $idNo;
+    //         $user->first_name   = ucwords(strtolower($firstName));
+    //         $user->middle_name  = $middleName ? ucwords(strtolower($middleName)) : null;
+    //         $user->last_name    = ucwords(strtolower($lastName));
+    //         $user->designation  = $designation ? ucwords(strtolower($designation)) : null;
+    //         $user->phone        = $phone;
+    //         $user->password     = password_hash($password, PASSWORD_BCRYPT);
+    //         $user->permissions  = $permissions;
+    //         $user->is_locked    = 0;
+    //         $user->avatar       = $avatarPath; 
+
+    //         if ($user->save()) {
+    //             return $response->setJsonContent([
+    //                 'status'  => 'success',
+    //                 'message' => 'User created successfully.'
+    //             ]);
+    //         } else {
+    //             return $response->setJsonContent([
+    //                 'status'  => 'error',
+    //                 'message' => 'Failed to save user.',
+    //                 'errors'  => $user->getMessages()
+    //             ]);
+    //         }
+    //     } catch (\Exception $e) {
+    //         return $response->setJsonContent([
+    //             'status'  => 'error',
+    //             'message' => $e->getMessage()
+    //         ]);
+    //     }
+    // }
     public function createUserAction()
     {
         $this->view->disable(); 
         $response = new Response();
 
         try {
-            $idNo        = trim($this->request->getPost('idNo', 'string'));
-            $firstName   = trim($this->request->getPost('first_name', 'string'));
-            $middleName  = trim($this->request->getPost('middle_name', 'string'));
-            $lastName    = trim($this->request->getPost('last_name', 'string'));
-            $designation = trim($this->request->getPost('designation', 'string'));
-            $phone       = trim($this->request->getPost('phone', 'string'));
-            $password    = trim($this->request->getPost('password', 'string'));
+            $idNo        = trim($this->request->getPost('idNo', 'string') ?? '');
+            $firstName   = trim($this->request->getPost('first_name', 'string') ?? '');
+            $middleName  = trim($this->request->getPost('middle_name', 'string') ?? '');
+            $lastName    = trim($this->request->getPost('last_name', 'string') ?? '');
+            $designation = trim($this->request->getPost('designation', 'string') ?? '');
+            $phone       = trim($this->request->getPost('phone', 'string') ?? '');
+            $password    = trim($this->request->getPost('password', 'string') ?? '');
             $permissions = $this->request->getPost('permissions');
+            $district    = $this->request->getPost('district', 'int');
+            $municipality= $this->request->getPost('municipality', 'int');
 
             if (!$idNo || !$firstName || !$lastName || !$password) {
                 return $response->setJsonContent([
@@ -908,7 +993,7 @@ class AdminController extends \Phalcon\Mvc\Controller
                 ]);
             }
 
-            // handle avatar upload
+            // Handle avatar upload
             $avatarPath = null;
             if ($this->request->hasFiles(true)) {
                 foreach ($this->request->getUploadedFiles() as $file) {
@@ -923,7 +1008,6 @@ class AdminController extends \Phalcon\Mvc\Controller
                     }
                 }
             }
-    
 
             $user = new Users();
             $user->idNo         = $idNo;
@@ -935,7 +1019,9 @@ class AdminController extends \Phalcon\Mvc\Controller
             $user->password     = password_hash($password, PASSWORD_BCRYPT);
             $user->permissions  = $permissions;
             $user->is_locked    = 0;
-            $user->avatar       = $avatarPath; 
+            $user->avatar       = $avatarPath;
+            $user->district     = $district ?: null;
+            $user->municipality = $municipality ?: null;
 
             if ($user->save()) {
                 return $response->setJsonContent([
@@ -1165,7 +1251,7 @@ class AdminController extends \Phalcon\Mvc\Controller
                     $fileName = uniqid() . '_' . $file->getName();
                     $file->moveTo($uploadDir . $fileName);
 
-                    $user->avatar = 'admin-avatar/' . $fileName; 
+                    $user->avatar = 'admin-avatar/' . $fileName; // save relative path
                 }
             }
             // Update other fields
@@ -1698,7 +1784,280 @@ class AdminController extends \Phalcon\Mvc\Controller
             'data' => json_decode($evaluation->answers, true)
         ]);
     }
+    //////////////////////////////////////////////////
+    // --- Priority Course Top 100 Export Excel --- //
+    //////////////////////////////////////////////////
+    public function exportSHSTopByCourseAction()
+    {
+        $this->view->disable();
 
+        $sql = "
+            SELECT
+                sa.application_ref_no,
+                CONCAT(
+                    a.applicant_last, ', ',
+                    a.applicant_first,
+                    CASE WHEN a.applicant_middle IS NOT NULL AND a.applicant_middle != ''
+                        THEN CONCAT(' ', a.applicant_middle) ELSE '' END,
+                    CASE WHEN a.applicant_extension IS NOT NULL AND a.applicant_extension != ''
+                        THEN CONCAT(' ', a.applicant_extension) ELSE '' END
+                ) AS full_name,
+                sa.priority_course,
+                TIMESTAMPDIFF(YEAR, a.birthdate, CURDATE()) AS age,
+                a.civil_status,
+                a.contact,
+                a.email,
+                a.current_academic_status,
+                m.name AS municipality_name,
+                sa.priority_weight
+            FROM scholarship_applications sa
+            INNER JOIN applicants a ON a.id = sa.applicant_id
+            LEFT JOIN municipalities m ON m.id = a.municipality
+            WHERE sa.scholarship_type = 'Priority Courses Scholarship'
+            AND sa.status = 'pending'
+            AND sa.priority_weight IS NOT NULL
+            AND sa.priority_course IS NOT NULL
+            AND a.current_academic_status IN ('1', '2')
+            ORDER BY sa.priority_weight DESC
+        ";
 
+        $connection = $this->getDI()->get('db');
+        $result     = $connection->query($sql);
+        $result->setFetchMode(\Phalcon\Db\Enum::FETCH_ASSOC);
+        $rows = $result->fetchAll();
+
+        // Group by individual course, track top 100 per course by score
+        $courseMap = [];
+        foreach ($rows as $row) {
+            $courses = array_map('trim', explode(',', $row['priority_course']));
+            foreach ($courses as $course) {
+                if (!isset($courseMap[$course])) {
+                    $courseMap[$course] = [];
+                }
+                // Only add if this course hasn't reached 100 yet
+                if (count($courseMap[$course]) < 100) {
+                    $courseMap[$course][] = $row;
+                }
+            }
+        }
+
+        // Flatten — deduplicate by application_ref_no across all courses
+        $seen = [];
+        $data = [];
+
+        foreach ($courseMap as $course => $applicants) {
+            foreach ($applicants as $row) {
+                $refNo = $row['application_ref_no'];
+
+                // Skip if this applicant was already added
+                if (isset($seen[$refNo])) continue;
+                $seen[$refNo] = true;
+
+                $allCourses = array_map('trim', explode(',', $row['priority_course']));
+
+                $data[] = [
+                    'application_ref_no'      => $refNo,
+                    'name'                    => preg_replace('/\s+/', ' ', $row['full_name']),
+                    'course_applied'          => implode(', ', $allCourses),
+                    'age'                     => $row['age'] !== null ? (int)$row['age'] : null,
+                    'civil_status'            => $row['civil_status'] ?? 'N/A',
+                    'contact'                 => $row['contact'] ?? 'N/A',
+                    'email'                   => $row['email'] ?? 'N/A',
+                    'current_academic_status' => $row['current_academic_status'],
+                    'municipality'            => $row['municipality_name'] ?? 'N/A',
+                    'priority_weight'         => $row['priority_weight'] !== null
+                        ? (float) number_format((float)$row['priority_weight'], 2, '.', '')
+                        : null,
+                ];
+            }
+        }
+
+        return $this->response->setJsonContent($data);
+    }
+    //////////////////////////////////////////////////
+    // --- 1PF & STAN C All applicants Export Excel --- //
+    //////////////////////////////////////////////////
+    public function exportOnePoorFamAllAction()
+    {
+        $this->view->disable();
+
+        $sql = "
+            SELECT
+                sa.application_ref_no,
+                sa.assessment_weight,
+                CONCAT(
+                    a.applicant_last, ', ',
+                    a.applicant_first,
+                    CASE WHEN a.applicant_middle IS NOT NULL AND a.applicant_middle != ''
+                        THEN CONCAT(' ', a.applicant_middle) ELSE '' END,
+                    CASE WHEN a.applicant_extension IS NOT NULL AND a.applicant_extension != ''
+                        THEN CONCAT(' ', a.applicant_extension) ELSE '' END
+                ) AS full_name,
+                TIMESTAMPDIFF(YEAR, a.birthdate, CURDATE()) AS age,
+                a.civil_status,
+                a.contact,
+                a.email,
+                a.current_academic_status,
+                m.name AS municipality_name,
+                latest_aa.answers AS applicant_answers
+            FROM scholarship_applications sa
+            INNER JOIN applicants a ON a.id = sa.applicant_id
+            LEFT JOIN municipalities m ON m.id = a.municipality
+            LEFT JOIN (
+                SELECT application_ref_no, answers
+                FROM assessment_answers
+                WHERE id IN (
+                    SELECT MAX(id)
+                    FROM assessment_answers
+                    GROUP BY application_ref_no
+                )
+            ) latest_aa ON latest_aa.application_ref_no = sa.application_ref_no
+            WHERE sa.scholarship_type = 'One Family One College Graduate Scholarship'
+            AND sa.status = 'pending'
+            AND (sa.ranking_status IS NULL OR sa.ranking_status != 'excluded')
+            AND sa.assessment_weight IS NOT NULL
+            ORDER BY sa.assessment_weight DESC
+        ";
+
+        $connection = $this->getDI()->get('db');
+        $result     = $connection->query($sql);
+        $result->setFetchMode(\Phalcon\Db\Enum::FETCH_ASSOC);
+        $rows = $result->fetchAll();
+
+        $data = [];
+        $seen = [];
+
+        foreach ($rows as $row) {
+            $refNo = $row['application_ref_no'];
+
+            // No duplicates
+            if (isset($seen[$refNo])) continue;
+            $seen[$refNo] = true;
+
+            $siblingInCollege = 'N/A';
+            $siblingGraduated = 'N/A';
+
+            if (!empty($row['applicant_answers'])) {
+                $answers = json_decode($row['applicant_answers'], true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($answers)) {
+                    foreach ($answers as $answer) {
+                        if (!isset($answer['id'])) continue;
+                        $id = trim((string) $answer['id']);
+                        if ($id === '2.3.6') $siblingInCollege = $answer['answer'] ?? 'N/A';
+                        if ($id === '2.3.7') $siblingGraduated = $answer['answer'] ?? 'N/A';
+                    }
+                }
+            }
+
+            $data[] = [
+                'application_ref_no'      => $refNo,
+                'assessment_weight'       => $row['assessment_weight'] !== null
+                    ? (float) number_format((float)$row['assessment_weight'], 2, '.', '')
+                    : null,
+                'name'                    => preg_replace('/\s+/', ' ', $row['full_name']),
+                'age'                     => $row['age'] !== null ? (int)$row['age'] : null,
+                'civil_status'            => $row['civil_status'] ?? 'N/A',
+                'sibling_in_college'      => $siblingInCollege,
+                'sibling_graduated'       => $siblingGraduated,
+                'current_academic_status' => $row['current_academic_status'] ?? 'N/A',
+                'contact'                 => $row['contact'] ?? 'N/A',
+                'email'                   => $row['email'] ?? 'N/A',
+                'municipality'            => $row['municipality_name'] ?? 'N/A',
+            ];
+        }
+
+        return $this->response->setJsonContent($data);
+    }
+    public function exportSTANCAllAction()
+    {
+        $this->view->disable();
+
+        $sql = "
+            SELECT
+                sa.application_ref_no,
+                sa.assessment_weight,
+                CONCAT(
+                    a.applicant_last, ', ',
+                    a.applicant_first,
+                    CASE WHEN a.applicant_middle IS NOT NULL AND a.applicant_middle != ''
+                        THEN CONCAT(' ', a.applicant_middle) ELSE '' END,
+                    CASE WHEN a.applicant_extension IS NOT NULL AND a.applicant_extension != ''
+                        THEN CONCAT(' ', a.applicant_extension) ELSE '' END
+                ) AS full_name,
+                TIMESTAMPDIFF(YEAR, a.birthdate, CURDATE()) AS age,
+                a.civil_status,
+                a.contact,
+                a.email,
+                a.current_academic_status,
+                m.name AS municipality_name,
+                latest_aa.answers AS applicant_answers
+            FROM scholarship_applications sa
+            INNER JOIN applicants a ON a.id = sa.applicant_id
+            LEFT JOIN municipalities m ON m.id = a.municipality
+            LEFT JOIN (
+                SELECT application_ref_no, answers
+                FROM assessment_answers
+                WHERE id IN (
+                    SELECT MAX(id)
+                    FROM assessment_answers
+                    GROUP BY application_ref_no
+                )
+            ) latest_aa ON latest_aa.application_ref_no = sa.application_ref_no
+            WHERE sa.scholarship_type = 'STAN C'
+            AND sa.status = 'pending'
+            AND (sa.ranking_status IS NULL OR sa.ranking_status != 'excluded')
+            AND sa.assessment_weight IS NOT NULL
+            ORDER BY sa.assessment_weight DESC
+        ";
+
+        $connection = $this->getDI()->get('db');
+        $result     = $connection->query($sql);
+        $result->setFetchMode(\Phalcon\Db\Enum::FETCH_ASSOC);
+        $rows = $result->fetchAll();
+
+        $data = [];
+        $seen = [];
+
+        foreach ($rows as $row) {
+            $refNo = $row['application_ref_no'];
+
+            // No duplicates
+            if (isset($seen[$refNo])) continue;
+            $seen[$refNo] = true;
+
+            $siblingInCollege = 'N/A';
+            $siblingGraduated = 'N/A';
+
+            if (!empty($row['applicant_answers'])) {
+                $answers = json_decode($row['applicant_answers'], true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($answers)) {
+                    foreach ($answers as $answer) {
+                        if (!isset($answer['id'])) continue;
+                        $id = trim((string) $answer['id']);
+                        if ($id === '2.3.6') $siblingInCollege = $answer['answer'] ?? 'N/A';
+                        if ($id === '2.3.7') $siblingGraduated = $answer['answer'] ?? 'N/A';
+                    }
+                }
+            }
+
+            $data[] = [
+                'application_ref_no'      => $refNo,
+                'assessment_weight'       => $row['assessment_weight'] !== null
+                    ? (float) number_format((float)$row['assessment_weight'], 2, '.', '')
+                    : null,
+                'name'                    => preg_replace('/\s+/', ' ', $row['full_name']),
+                'age'                     => $row['age'] !== null ? (int)$row['age'] : null,
+                'civil_status'            => $row['civil_status'] ?? 'N/A',
+                'sibling_in_college'      => $siblingInCollege,
+                'sibling_graduated'       => $siblingGraduated,
+                'current_academic_status' => $row['current_academic_status'] ?? 'N/A',
+                'contact'                 => $row['contact'] ?? 'N/A',
+                'email'                   => $row['email'] ?? 'N/A',
+                'municipality'            => $row['municipality_name'] ?? 'N/A',
+            ];
+        }
+
+        return $this->response->setJsonContent($data);
+    }
 }
 

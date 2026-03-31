@@ -236,4 +236,19 @@ $router->addPost('/admin/reject-stan-c-applicants', [
     'action'     => 'rejectStanCApplicants'
 ]);
 
+// $router->addGet('/admin/exportSHSTopByCourse', [
+$router->addGet('/admin/export-shs-top-by-course', [
+    'controller' => 'admin',
+    'action'     => 'exportSHSTopByCourse'
+]);
+// $router->addGet('/admin/exportOnePoorFamAll', [
+$router->addGet('/admin/export-one-poor-fam-all', [
+    'controller' => 'admin',
+    'action'     => 'exportOnePoorFamAll'
+]);
+// $router->addGet('/admin/exportSTANCAll', [
+$router->addGet('/admin/export-stan-c-all', [
+    'controller' => 'admin',
+    'action'     => 'exportSTANCAll'
+]);
 $router->handle($_SERVER['REQUEST_URI']);

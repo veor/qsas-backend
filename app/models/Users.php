@@ -11,7 +11,7 @@ class Users extends \Phalcon\Mvc\Model
 
     /**
      *
-     * @var string
+     * @var integer
      */
     public $idNo;
 
@@ -26,6 +26,12 @@ class Users extends \Phalcon\Mvc\Model
      * @var string
      */
     public $first_name;
+
+    /**
+     *
+     * @var string
+     */
+    public $middle_name;
 
     /**
      *
@@ -59,6 +65,12 @@ class Users extends \Phalcon\Mvc\Model
 
     /**
      *
+     * @var string
+     */
+    public $avatar;
+
+    /**
+     *
      * @var integer
      */
     public $is_locked;
@@ -76,6 +88,18 @@ class Users extends \Phalcon\Mvc\Model
     public $updated_at;
 
     /**
+     *
+     * @var integer
+     */
+    public $district;
+
+    /**
+     *
+     * @var integer
+     */
+    public $municipality;
+
+  /**
      * Initialize method for model.
      */
     public function initialize()
@@ -90,7 +114,7 @@ class Users extends \Phalcon\Mvc\Model
         if ($this->permissions && is_array($this->permissions)) {
             $this->permissions = json_encode($this->permissions);
         }
-    $this->name = null;
+    // $this->name = null;
     }
 
     public function afterFetch()

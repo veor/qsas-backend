@@ -355,6 +355,87 @@ class ApplicantController extends \Phalcon\Mvc\Controller
     // -- Applicant Setting -- //
     /////////////////////////////
     // Update applicant details 
+    // public function updateAction()
+    // {
+    //     $request = $this->request;
+
+    //     if (!$request->isPost()) {
+    //         return (new Response())->setJsonContent(['error' => 'Invalid request'])->setStatusCode(400);
+    //     }
+
+    //     $id = $request->getPost('id');
+    //     $applicant = Applicants::findFirstById($id);
+
+    //     if (!$applicant) {
+    //         return (new Response())->setJsonContent(['error' => 'Applicant not found'])->setStatusCode(404);
+    //     }
+
+    //     $data = $request->getPost();
+    //     $files = $request->getUploadedFiles();
+
+    //     if (!empty($files)) {
+    //         foreach ($files as $file) {
+    //             if ($file->getKey() === 'picture' && $file->getSize() > 0) {
+    //                 $uploadDir = dirname(APP_PATH) . '/public/applicant-profile/';
+    //                 if (!is_dir($uploadDir)) {
+    //                     mkdir($uploadDir, 0755, true);
+    //                 }
+
+    //                 if (!empty($applicant->picture)) {
+    //                     $oldFile = dirname(APP_PATH) . '/public/' . $applicant->picture;
+    //                     if (file_exists($oldFile)) {
+    //                         unlink($oldFile);
+    //                     }
+    //                 }
+
+    //                 $fileName = uniqid() . '_' . $file->getName();
+    //                 $picturePath = 'applicant-profile/' . $fileName;
+    //                 $file->moveTo($uploadDir . $fileName);
+
+    //                 $data['picture'] = $picturePath;
+    //             }
+    //         }
+    //     }
+
+    //     if (!empty($data['secret_answer'])) {
+    //         $data['secret_answer'] = password_hash($data['secret_answer'], PASSWORD_DEFAULT);
+    //     } else {
+    //         unset($data['secret_answer']); 
+    //     }
+
+    //     if (empty($data['secret_question'])) {
+    //         unset($data['secret_question']);
+    //     }
+        
+    //     $applicant->assign($data);
+
+    //     if ($applicant->save()) {
+    //         $applicationRefNo = $applicant->application_ref_no;
+    //         $hasRefNo = !empty($applicationRefNo);
+    //         $hasAssessmentAnswers = false;
+
+    //         if ($hasRefNo) {
+    //             $assessmentAnswer = AssessmentAnswers::findFirst([
+    //                 'conditions' => 'application_ref_no = :ref:',
+    //                 'bind' => ['ref' => $applicationRefNo]
+    //             ]);
+    //             $hasAssessmentAnswers = $assessmentAnswer !== null;
+    //         }
+
+    //         return (new Response())->setJsonContent([
+    //             'success' => true,
+    //             'picture' => !empty($data['picture']) ? '/' . $data['picture'] : $applicant->picture,
+    //             'application_ref_no' => $applicationRefNo,
+    //             'has_ref_no' => $hasRefNo,
+    //             'has_assessment_answers' => $hasAssessmentAnswers,
+    //         ]);
+    //     }
+
+    //     return (new Response())->setJsonContent([
+    //         'error' => 'Failed to update applicant',
+    //         'messages' => $applicant->getMessages()
+    //     ])->setStatusCode(500);
+    // }
     public function updateAction()
     {
         $request = $this->request;
@@ -381,7 +462,7 @@ class ApplicantController extends \Phalcon\Mvc\Controller
                         mkdir($uploadDir, 0755, true);
                     }
 
-                    // remove old picture if exists
+                    // Remove old picture if exists
                     if (!empty($applicant->picture)) {
                         $oldFile = dirname(APP_PATH) . '/public/' . $applicant->picture;
                         if (file_exists($oldFile)) {
@@ -399,17 +480,37 @@ class ApplicantController extends \Phalcon\Mvc\Controller
             }
         }
 
-        // re-hash secret answer if changed
+        // Re-hash secret answer if changed
         if (!empty($data['secret_answer'])) {
             $data['secret_answer'] = password_hash($data['secret_answer'], PASSWORD_DEFAULT);
         } else {
-            unset($data['secret_answer']); 
+            unset($data['secret_answer']);
         }
 
         if (empty($data['secret_question'])) {
             unset($data['secret_question']);
         }
-        
+
+        // Format to uppercase (same as submitAction)
+        $formatUpper = function($value) {
+            if (empty($value)) return null;
+            $value = preg_replace('/\s+/', ' ', $value);
+            return strtoupper(trim($value));
+        };
+
+        foreach (['applicant_course', 'current_course', 'current_school'] as $field) {
+            if (isset($data[$field])) {
+                $data[$field] = $formatUpper($data[$field]);
+            }
+        }
+
+        // Remove any empty/null fields so existing DB values are not overwritten
+        foreach ($data as $key => $value) {
+            if ($value === null || $value === '') {
+                unset($data[$key]);
+            }
+        }
+
         $applicant->assign($data);
 
         if ($applicant->save()) {
@@ -433,12 +534,6 @@ class ApplicantController extends \Phalcon\Mvc\Controller
                 'has_assessment_answers' => $hasAssessmentAnswers,
             ]);
         }
-        // if ($applicant->save()) {
-        //     return (new Response())->setJsonContent([
-        //         'success' => true,
-        //         'picture' => !empty($data['picture']) ? '/' . $data['picture'] : $applicant->picture
-        //     ]);
-        // }
 
         return (new Response())->setJsonContent([
             'error' => 'Failed to update applicant',

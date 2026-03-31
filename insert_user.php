@@ -23,6 +23,14 @@ $connection->insert(
         json_encode([
             "dashboard.access",
             "applicantList.access",
+            "user.create", 
+            "user.change_self_password", 
+            "user.change_user_password", 
+            "user.edit_self_permissions", 
+            "user.edit_user_permissions", 
+            "user.can_access_users", 
+            "user.can_view_assessment",
+            "assessment.manage"
         ]),
         'Administrative Aide VI', // designation
         '09123456789',   // phone
